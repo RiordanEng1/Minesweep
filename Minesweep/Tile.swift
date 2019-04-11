@@ -15,6 +15,7 @@ class Tile : SKSpriteNode {
     var neighbors = [Tile]()
     var isClicked = false
     var mainScene : GameScene?
+    var flagged = false
     
     init(startx : Int, starty: Int, scene: SKScene) {
         let tex = SKTexture(imageNamed: "tile_base")
@@ -22,17 +23,36 @@ class Tile : SKSpriteNode {
         self.size = CGSize(width: tileSize, height: tileSize)
         self.position = CGPoint(x: startx, y: starty)
         self.name = "tile"
-        mainScene = scene as! GameScene
+        mainScene = (scene as! GameScene)
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func flag() {
+        if (isClicked) {
+            return
+        }
+        flagged = !flagged
+        if flagged {
+            self.texture = SKTexture(imageNamed: "flagged")
+        } else {
+            self.texture = SKTexture(imageNamed: "tile_base")
+        }
+    }
+    
+    func explode() {
+        self.texture = SKTexture(imageNamed: "bomb")
+    }
+    
     func click() {
         isClicked = true
+        if flagged {
+            return
+        }
         if isBomb {
-            self.texture = SKTexture(imageNamed: "bomb")
+            self.explode()
             mainScene!.explode()
         } else {
             let numStr = String(count)

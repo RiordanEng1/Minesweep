@@ -9,33 +9,37 @@
 import SpriteKit
 import GameplayKit
 
-let tileSize = 28
-let numBombs = 40
+let tileSize = 60
+let numBombs = 20
 var flagMode = false
+var gridSize = 12
+var gameOver = false
 
 class GameScene: SKScene {
-    var tiles = [[Tile?]](repeating: [Tile?](repeating: nil, count: 20), count: 20)
+    var tiles = [[Tile?]](repeating: [Tile?](repeating: nil, count: gridSize), count: gridSize)
     
     override func didMove(to view: SKView) {
-        for x in 0...19 {
-            for y in 0...19 {
-                let xpos = (tileSize * x) - 260
-                let ypos = (tileSize * y) - 260
-                tiles[x][y] = Tile(startx: xpos, starty: ypos, scene: self)
-                self.addChild(tiles[x][y]!)
-            }
-        }
         setup()
     }
     
     func setup() {
+        gameOver = false
+        self.removeAllChildren()
+        for x in 0...gridSize-1 {
+            for y in 0...gridSize-1 {
+                let xpos = (tileSize * x) - 340
+                let ypos = (tileSize * y) - 280
+                tiles[x][y] = Tile(startx: xpos, starty: ypos, scene: self)
+                self.addChild(tiles[x][y]!)
+            }
+        }
         for _ in 0...numBombs {
-            let rx = Int.random(in: 0...19)
-            let ry = Int.random(in: 0...19)
+            let rx = Int.random(in: 0...gridSize-1)
+            let ry = Int.random(in: 0...gridSize-1)
             tiles[rx][ry]!.isBomb = true
         }
-        for x in 0...19 {
-            for y in 0...19 {
+        for x in 0...gridSize-1 {
+            for y in 0...gridSize-1 {
                 var tCount = 0
                 if x > 0 {
                     if tiles[x-1][y]!.isBomb {
@@ -43,7 +47,7 @@ class GameScene: SKScene {
                     }
                     tiles[x][y]!.neighbors.append(tiles[x-1][y]!)
                 }
-                if x < 19 {
+                if x < gridSize-1 {
                     if tiles[x+1][y]!.isBomb {
                         tCount += 1
                     }
@@ -55,7 +59,7 @@ class GameScene: SKScene {
                     }
                     tiles[x][y]!.neighbors.append(tiles[x][y-1]!)
                 }
-                if y < 19 {
+                if y < gridSize-1 {
                     if tiles[x][y+1]!.isBomb {
                         tCount += 1
                     }
@@ -67,19 +71,19 @@ class GameScene: SKScene {
                     }
                     tiles[x][y]!.neighbors.append(tiles[x-1][y-1]!)
                 }
-                if x > 0 && y < 19 {
+                if x > 0 && y < gridSize-1 {
                     if tiles[x-1][y+1]!.isBomb {
                         tCount += 1
                     }
                     tiles[x][y]!.neighbors.append(tiles[x-1][y+1]!)
                 }
-                if x < 19 && y > 0 {
+                if x < gridSize-1 && y > 0 {
                     if tiles[x+1][y-1]!.isBomb {
                         tCount += 1
                     }
                     tiles[x][y]!.neighbors.append(tiles[x+1][y-1]!)
                 }
-                if x < 19 && y < 19 {
+                if x < gridSize-1 && y < gridSize-1 {
                     if tiles[x+1][y+1]!.isBomb {
                         tCount += 1
                     }
@@ -91,12 +95,13 @@ class GameScene: SKScene {
     }
     
     func explode() {
-        var timeDelay : Double = 1
+        gameOver = true
+        var timeDelay : Double = 0.3
         for row in tiles {
             for tile in row {
                 if tile!.isBomb {
                     let _ = Timer.scheduledTimer(withTimeInterval: TimeInterval(timeDelay), repeats: false) { _ in
-                        tile!.click()
+                        tile!.explode()
                     }
                     timeDelay += 0.1
                 }
@@ -105,13 +110,34 @@ class GameScene: SKScene {
     }
     
     func touchDown(atPoint pos : CGPoint) {
+        if gameOver {
+            return
+        }
         let touched = self.nodes(at: pos)
         for tile in touched {
             if tile.name == "tile" {
                 let cTile = tile as! Tile
-                cTile.click()
+                if flagMode {
+                    cTile.flag()
+                } else {
+                    cTile.click()
+                }
             }
         }
+        checkWin()
+    }
+    
+    func checkWin() {
+        for row in tiles {
+            for tile in row {
+                if !tile!.isClicked && !tile!.isBomb{
+                    return
+                }
+            }
+        }
+
+        self.addChild(SKSpriteNode(imageNamed: "trophy"))
+        gameOver = true
     }
     
     func touchMoved(toPoint pos : CGPoint) {

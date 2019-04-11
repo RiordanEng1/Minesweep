@@ -10,13 +10,20 @@ import UIKit
 import SpriteKit
 import GameplayKit
 
-class GameViewController: UIViewController {    override func viewDidLoad() {
+class GameViewController: UIViewController {
+    var gameScene : GameScene?
+    var timer : Timer?
+    var seconds = 0, minutes = 0
+    @IBOutlet weak var clockLabel: UILabel!
+    
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         if let view = self.view as! SKView? {
             // Load the SKScene from 'GameScene.sks'
             if let scene = SKScene(fileNamed: "GameScene") {
                 // Set the scale mode to scale to fit the window
+                gameScene = (scene as! GameScene)
                 scene.scaleMode = .aspectFill
                 // Present the scene
                 view.presentScene(scene)
@@ -25,14 +32,43 @@ class GameViewController: UIViewController {    override func viewDidLoad() {
             
             view.showsFPS = true
             view.showsNodeCount = true
+            startClock()
         }
+    }
+    
+    func startClock() {
+        if let t = timer {
+            t.invalidate()
+        }
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(GameViewController.updateClock), userInfo: nil, repeats: true)
+        seconds = 0
+        minutes = 0
+    }
+    
+    @objc func updateClock() {
+        if gameOver {
+            timer!.invalidate()
+        }
+        let formatter = NumberFormatter()
+        formatter.minimumIntegerDigits = 2
+        formatter.maximumIntegerDigits = 2
+        clockLabel.text = formatter.string(from: NSNumber(integerLiteral: minutes))! + ":" + formatter.string(from: NSNumber(integerLiteral: seconds))!
+        seconds += 1
+        if seconds >= 60 {
+            minutes += 1
+            seconds = 0
+        }
+    }
+    @IBAction func reset(_ sender: Any) {
+        startClock()
+        gameScene!.setup()
     }
     @IBAction func flagModeButton(_ sender: UIButton) {
         flagMode = !flagMode
         if (flagMode) {
-            sender.backgroundColor = UIColor.white
-        } else {
             sender.backgroundColor = UIColor.red
+        } else {
+            sender.backgroundColor = UIColor.white
         }
     }
     
