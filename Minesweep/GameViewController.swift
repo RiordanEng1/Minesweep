@@ -11,7 +11,6 @@ import SpriteKit
 import GameplayKit
 
 class GameViewController: UIViewController {
-    var gameScene : GameScene?
     var timer : Timer?
     var seconds = 0, minutes = 0
     @IBOutlet weak var clockLabel: UILabel!
@@ -23,7 +22,8 @@ class GameViewController: UIViewController {
             // Load the SKScene from 'GameScene.sks'
             if let scene = SKScene(fileNamed: "GameScene") {
                 // Set the scale mode to scale to fit the window
-                gameScene = (scene as! GameScene)
+                let gameScene = scene as! GameScene
+                gameScene.gvc = self
                 scene.scaleMode = .aspectFill
                 // Present the scene
                 view.presentScene(scene)
@@ -34,6 +34,12 @@ class GameViewController: UIViewController {
             view.showsNodeCount = true
             startClock()
         }
+    }
+    
+    func gameOver() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let controller = storyboard.instantiateViewController(withIdentifier: "someViewController")
+        self.present(controller, animated: true, completion: nil)
     }
     
     func startClock() {
@@ -63,6 +69,8 @@ class GameViewController: UIViewController {
         startClock()
         gameScene!.setup()
     }
+    
+
     @IBAction func flagModeButton(_ sender: UIButton) {
         flagMode = !flagMode
         if (flagMode) {

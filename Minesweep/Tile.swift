@@ -8,8 +8,10 @@
 
 import Foundation
 import SpriteKit
-
+//inheritance
 class Tile : SKSpriteNode {
+    //contain
+//    var sprite = SKSpriteNode(imageNamed: "tile_base")
     var isBomb = false
     var count = 0
     var neighbors = [Tile]()
@@ -17,7 +19,10 @@ class Tile : SKSpriteNode {
     var mainScene : GameScene?
     var flagged = false
     
-    init(startx : Int, starty: Int, scene: SKScene) {
+    
+    var count = 2
+    
+    init(startx : Int, starty: Int) {
         let tex = SKTexture(imageNamed: "tile_base")
         super.init(texture: tex, color: UIColor.clear, size: tex.size())
         self.size = CGSize(width: tileSize, height: tileSize)
@@ -44,9 +49,27 @@ class Tile : SKSpriteNode {
     
     func explode() {
         self.texture = SKTexture(imageNamed: "bomb")
+        
     }
     
     func click() {
+        
+        if isClicked {
+            var tCount = 0
+            for n in neighbors {
+                if n.flagged {
+                    tCount += 1
+                }
+            }
+            if tCount == count {
+                for n in neighbors {
+                    if !n.isClicked {
+                        n.click()
+                    }
+                }
+            }
+        }
+        
         isClicked = true
         if flagged {
             return
@@ -57,6 +80,9 @@ class Tile : SKSpriteNode {
         } else {
             let numStr = String(count)
             self.texture = SKTexture(imageNamed: numStr)
+            if count == 1 {
+                
+            }
             if count == 0 {
                 for neighbor in neighbors {
                     if !neighbor.isClicked {
